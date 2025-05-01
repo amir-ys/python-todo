@@ -6,7 +6,7 @@ from typing import Optional
 authenticated_user = None
 
 print("Welcome to todo app")
-command = input("Please enter your command ")
+
 
 class Json():
     @staticmethod
@@ -71,11 +71,16 @@ def login_user():
     else:
         print(f"welcome back, {authenticated_user}!")
         return True
+    
 
-     
-
-
-match command :
-    case "register-user" | "r" : register_user()
-    case "login" | "l" : login_user()
+while True:
+    command = input("Please enter your command ")
+    match command :
+        case "register-user" | "r" : register_user()
+        case "login" | "l" : login_user()
+        case "exit" | "q":
+            print("goodbye")
+            break
+        case _:
+            print("Unknown command. Please try again.")
 
