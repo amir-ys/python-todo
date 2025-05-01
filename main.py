@@ -4,6 +4,7 @@ import json
 from typing import Optional
 
 authenticated_user = None
+users = {}
 
 print("Welcome to todo app")
 
@@ -48,36 +49,60 @@ def login_user():
         password=password
     ) 
 
-    with open("users.txt", "r") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                user = User.from_json(line)
-                if user.email == input_user.email and user.password == input_user.password:
-                    global authenticated_user
-                    authenticated_user = user.email
-                    break
-            
-            except json.JSONDecodeError as e:
-                print("خطا در خواندن JSON:", e)
+    def check_user_is_loged_in(line):
+        user = User.from_json(line)
+        if user.email == input_user.email and user.password == input_user.password:
+            global authenticated_user
+            authenticated_user = user.email
+            return True
+        return False
         
 
-            
+    read_json_file("users.txt" ,check_user_is_loged_in)
+
     if authenticated_user is None:
         print("authentication failed: invalid email or password.")
         return False
     else:
         print(f"welcome back, {authenticated_user}!")
         return True
+
+
+def load_users_from_storage():
+    def save_users_in_dic(line):
+         user = User.from_json(line)
+         users[user.email] = user
+         return False
     
+    read_json_file("users.txt" , save_users_in_dic)
+
+
+def read_json_file(file_path , callback):
+    with open(file_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+              if callback(line):
+                  break
+            except json.JSONDecodeError as e:
+                print("خطا در خواندن JSON:", e)
+
+
+def user_info():
+    if authenticated_user is None:
+        print("unauthenticated")
+        return
+    print(users[authenticated_user])
 
 while True:
+    load_users_from_storage()
     command = input("Please enter your command ")
     match command :
         case "register-user" | "r" : register_user()
         case "login" | "l" : login_user()
+        case "info" | "i" : user_info()
         case "exit" | "q":
             print("goodbye")
             break
