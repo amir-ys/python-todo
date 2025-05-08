@@ -3,6 +3,7 @@ import dataclasses
 import json
 import bcrypt
 from typing import Optional
+from pydantic import BaseModel, EmailStr, constr
 
 authenticated_user = None
 users = {}
@@ -10,14 +11,7 @@ users = {}
 print("Welcome to todo app")
 
 
-class Json():
-    @staticmethod
-    def from_json(json_str):
-     return User(**json.loads(json_str))
-
-
-@dataclass
-class User(Json):
+class User(BaseModel):
     email: str
     password: str
     name: Optional[str] = None
@@ -35,7 +29,7 @@ def register_user():
         password = bcrypt.hashpw(password.encode('utf-8') , bcrypt.gensalt()).decode('utf-8')
     )
      
-     user_json_data =  json.dumps(dataclasses.asdict(user_data)) + "\n"
+     user_json_data =  user_data.model_dump_json() + "\n"
      with open("users.txt" , "a") as f:
         f.write(user_json_data)
 
@@ -52,7 +46,8 @@ def login_user():
     ) 
 
     def check_user_is_loged_in(line):
-        user = User.from_json(line)
+        user = User.model_validate_json(line)
+    
         if user.email == input_user.email and bcrypt.checkpw(input_user.password.encode('utf-8') ,user.password.encode('utf-8')):
             global authenticated_user
             authenticated_user = user.email
@@ -72,7 +67,7 @@ def login_user():
 
 def load_users_from_storage():
     def save_users_in_dic(line):
-         user = User.from_json(line)
+         user = User.model_validate_json(line)
          users[user.email] = user
          return False
     
