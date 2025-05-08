@@ -1,39 +1,41 @@
-from dataclasses import dataclass
-import dataclasses
 import json
 import bcrypt
 from typing import Optional
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr, constr,ValidationError
 
 authenticated_user = None
 users = {}
 
 print("Welcome to todo app")
 
-
+PasswordStr = constr(min_length=6)  
 class User(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: PasswordStr
     name: Optional[str] = None
 
 def register_user():
-     
-     name = input("please enter your name : \n")
-     email = input("please enter your email : \n")
-     password =  input("please enter your password : \n")
+    name = input("Please enter your name:\n")
+    email = input("Please enter your email:\n")
+    password = input("Please enter your password:\n")
+    try:
+        user_data = User(
+            name=name,
+            email=email,
+            password=bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        )
 
+        user_json_data = user_data.model_dump_json() + "\n"
+        with open("users.txt", "a") as f:
+            f.write(user_json_data)
 
-     user_data = User(
-        name = name , 
-        email = email ,
-        password = bcrypt.hashpw(password.encode('utf-8') , bcrypt.gensalt()).decode('utf-8')
-    )
-     
-     user_json_data =  user_data.model_dump_json() + "\n"
-     with open("users.txt" , "a") as f:
-        f.write(user_json_data)
-
-     print(user_json_data)
+        print("✅ User registered successfully:")
+        print(user_json_data)
+    except ValidationError as e:
+        print("❌ Validation failed:")
+        for error in e.errors():
+            print(f"  - {error['loc'][0]}: {error['msg']}")
+       
 
 
 def login_user():
