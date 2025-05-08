@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import dataclasses
 import json
+import bcrypt
 from typing import Optional
 
 authenticated_user = None
@@ -31,13 +32,14 @@ def register_user():
      user_data = User(
         name = name , 
         email = email ,
-        password =  password
+        password = bcrypt.hashpw(password.encode('utf-8') , bcrypt.gensalt()).decode('utf-8')
     )
      
      user_json_data =  json.dumps(dataclasses.asdict(user_data)) + "\n"
-     print('df')
      with open("users.txt" , "a") as f:
         f.write(user_json_data)
+
+     print(user_json_data)
 
 
 def login_user():
@@ -51,7 +53,7 @@ def login_user():
 
     def check_user_is_loged_in(line):
         user = User.from_json(line)
-        if user.email == input_user.email and user.password == input_user.password:
+        if user.email == input_user.email and bcrypt.checkpw(input_user.password.encode('utf-8') ,user.password.encode('utf-8')):
             global authenticated_user
             authenticated_user = user.email
             return True
@@ -64,7 +66,7 @@ def login_user():
         print("authentication failed: invalid email or password.")
         return False
     else:
-        print(f"welcome back, {authenticated_user}!")
+        print(f"welcome back , your are logged in, {authenticated_user}!")
         return True
 
 
