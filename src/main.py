@@ -2,6 +2,7 @@ import json
 import bcrypt
 from typing import Optional
 from pydantic import BaseModel, EmailStr, constr, ValidationError
+from models import User, Category, Task
 
 authenticated_user = None
 users = {}
@@ -10,15 +11,6 @@ tasks = {}
 
 
 print("Welcome to todo app")
-
-PasswordStr = constr(min_length=6)
-
-class User(BaseModel):
-    id: int
-    email: EmailStr
-    password: PasswordStr
-    name: Optional[str] = None
-
 
 def register_user():
     name = input("Please enter your name:\n")
@@ -98,12 +90,6 @@ def user_info():
     print(authenticated_user.model_dump())
 
 
-class Category(BaseModel):
-    id: int
-    title: str
-    color: str
-    userId: int
-
 
 def create_category():
     title = input("Please enter title of category:\n")
@@ -133,14 +119,6 @@ def list_categories():
         print("📂 Your categories:")
         for cat in response.values():
             print(f"- {cat.title} (color: {cat.color})")
-
-
-class Task(BaseModel):
-    id: int
-    title: str
-    body: str
-    category_id: int
-    user_id: int
 
 
 def create_task():
