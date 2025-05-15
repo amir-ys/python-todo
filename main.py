@@ -6,6 +6,8 @@ from pydantic import BaseModel, EmailStr, constr, ValidationError
 authenticated_user = None
 users = {}
 categories = {}
+tasks = {}
+
 
 print("Welcome to todo app")
 
@@ -133,6 +135,63 @@ def list_categories():
             print(f"- {cat.title} (color: {cat.color})")
 
 
+class Task(BaseModel):
+    id: int
+    title: str
+    body: str
+    category_id: int
+    user_id: int
+
+
+def create_task():
+    if not categories:
+        print("❗ You must create a category first.")
+        return
+
+    title = input("Enter task title:\n")
+    body = input("Enter task body:\n")
+
+    print("Available categories:")
+    for cat_id, cat in categories.items():
+        if cat.userId == authenticated_user.id:
+            print(f"{cat_id}: {cat.title}")
+
+    try:
+        category_id = int(input("Enter category ID to assign this task:\n"))
+        if category_id not in categories or categories[category_id].userId != authenticated_user.id:
+            print("❌ Invalid category ID.")
+            return
+    except ValueError:
+        print("❌ Please enter a valid number for category ID.")
+        return
+
+    task_id = len(tasks) + 1
+    task = Task(
+        id=task_id,
+        title=title,
+        body=body,
+        category_id=category_id,
+        user_id=authenticated_user.id
+    )
+
+    tasks[task_id] = task
+    print(f"✅ Task '{title}' created.")
+
+
+def list_tasks():
+    print("📋 Your Tasks:")
+    has_task = False
+    for task in tasks.values():
+        if task.user_id == authenticated_user.id:
+            has_task = True
+            cat = categories.get(task.category_id)
+            cat_title = cat.title if cat else "❓ Unknown Category"
+            print(f"- {task.title} ({cat_title})\n  {task.body}")
+    if not has_task:
+        print("❕ No tasks found.")
+
+
+
 # main loop
 while True:
     load_users_from_storage()
@@ -154,6 +213,10 @@ while True:
             create_category()
         case "list-category":
             list_categories()
+        case "create-task":
+            create_task()
+        case "list-task":
+            list_tasks()
         case "exit" | "q":
             print("👋 Goodbye")
             break
